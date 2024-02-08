@@ -1,0 +1,8 @@
+[package]
+name = "main"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+memmap2 = "0.9.4"
+zstd = "0.13.0"

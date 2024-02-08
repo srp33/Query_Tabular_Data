@@ -1,0 +1,7 @@
+core
+data
+nohup*
+results
+tmp
+zstd-dev
+*.pyc
