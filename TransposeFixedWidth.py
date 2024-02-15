@@ -1,6 +1,6 @@
 import mmap
 import sys
-from Helper import *
+from helper import *
 
 file_path = sys.argv[1]
 out_file_path = sys.argv[2]

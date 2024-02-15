@@ -1,7 +1,7 @@
 import gzip
 import os
 import sys
-from Helper import *
+from helper import *
 from fastnumbers import *
 
 tsv_file_path = sys.argv[1]
@@ -73,15 +73,15 @@ with open(out_file_path, 'wb') as out_file:
     for line in tsv_file:
         line_items = line.rstrip(b"\n").split(b"\t")
 
-        line_out = ""
+        line_out_items = []
         for i in sorted(column_size_dict.keys()):
             format_string = "{:<" + str(column_size_dict[i]) + "}"
             column_value = format_string.format(line_items[i].decode())
-            line_out += column_value
+            line_out_items.append(column_value)
 
         # This newline character is unnecessary, so it adds a bit of disk space.
         # However, it makes the files much more readable to humans.
-        line_out = (line_out + "\n").encode()
+        line_out = ("".join(line_out_items) + "\n").encode()
         out_file.write(line_out)
 
 tsv_file.close()

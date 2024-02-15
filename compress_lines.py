@@ -2,7 +2,7 @@ import mmap
 import os
 import shutil
 import sys
-from Helper import *
+from helper import *
 
 in_file_path = sys.argv[1]
 num_rows = int(sys.argv[2])

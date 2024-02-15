@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import sys
-from Helper import *
+from helper import *
 
 in_file_path = sys.argv[1]
 out_file_path = sys.argv[2]

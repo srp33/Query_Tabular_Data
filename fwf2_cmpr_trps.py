@@ -1,7 +1,7 @@
 import mmap
 import re
 import sys
-from Helper import *
+from helper import *
 import itertools
 import fastnumbers
 import zstandard

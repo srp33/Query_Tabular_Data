@@ -1,7 +1,7 @@
 import mmap
 import re
 import sys
-from Helper import *
+from helper import *
 import fastnumbers
 
 compression_method = sys.argv[1]

@@ -1,7 +1,7 @@
 import mmap
 import re
 import sys
-from Helper import *
+from helper import *
 
 file_path = sys.argv[1]
 col_names_file_path = sys.argv[2]

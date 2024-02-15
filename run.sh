@@ -12,6 +12,12 @@
 set -o errexit
 
 #######################################################
+# Create directories
+#######################################################
+
+mkdir -p data results scripts
+
+#######################################################
 # Set up Docker
 #######################################################
 
@@ -43,12 +49,13 @@ function buildDockerImage {
     cd $currentDir
 }
 
-#buildDockerImage tab_bench_python
-#buildDockerImage tab_bench_r
-#buildDockerImage tab_bench_rust $currentDir/Rust
+buildDockerImage tab_bench_python
+buildDockerImage tab_bench_r
+buildDockerImage tab_bench_rust $currentDir/Rust
 
-baseDockerCommand="docker run -i -t --rm --user $(id -u):$(id -g) -v $(pwd):/sandbox -v $(pwd)/data:/data -v /tmp:/tmp --workdir=/sandbox"
-#baseDockerCommand="docker run -d --rm --user $(id -u):$(id -g) -v $(pwd):/sandbox -v $(pwd)/data:/data -v /tmp:/tmp --workdir=/sandbox"
+baseDockerCommand="docker run --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+#baseDockerCommand="docker run -i -t --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+#baseDockerCommand="docker run -d --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
 pythonDockerCommand="$baseDockerCommand $pythonImage"
 rDockerCommand="$baseDockerCommand $rImage"
 rustDockerCommand="$baseDockerCommand $rustImage"
@@ -57,18 +64,16 @@ rustDockerCommand="$baseDockerCommand $rustImage"
 # Create TSV files
 #######################################################
 
-mkdir -p data
-
 small="10 90 1000"
 tall="100 900 1000000"
 wide="100000 900000 1000"
 
-## Small file
-#$pythonDockerCommand python BuildTsvFile.py $small /data/${small// /_}.tsv
-## Tall, narrow file
-#$pythonDockerCommand python BuildTsvFile.py $tall /data/${tall// /_}.tsv
-## Short, wide file
-#$pythonDockerCommand python BuildTsvFile.py $wide /data/${wide// /_}.tsv
+# Small file
+$pythonDockerCommand python scripts/build_tsv.py $small data/${small// /_}.tsv
+# Tall, narrow file
+$pythonDockerCommand python scripts/build_tsv.py $tall data/${tall// /_}.tsv
+# Short, wide file
+$pythonDockerCommand python scripts/build_tsv.py $wide data/${wide// /_}.tsv
 
 #######################################################
 # Convert files to other formats.
@@ -86,40 +91,45 @@ function convertTSV {
   dataFile=data/${numDiscrete}_${numNumeric}_$numRows.tsv
   outFile=data/${numDiscrete}_${numNumeric}_${numRows}.${outExtension}
 
-  rm -f $outFile
-
-  echo -n -e "${outExtension}\t$numDiscrete\t$numNumeric\t$numRows\t" >> $resultFile
+#  if [ -f $outFile ]
+#  then
+#    echo $outFile already exists.
+#  else
+    echo -n -e "${outExtension}\t$numDiscrete\t$numNumeric\t$numRows\t" >> $resultFile
   
-  command="${commandPrefix} $dataFile $outFile"
+    command="${commandPrefix} $dataFile $outFile"
 
-#  $dockerCommand $command
-  $dockerCommand /usr/bin/time --verbose $command &> /tmp/result
-  $pythonDockerCommand python ParseTimeMemoryInfo.py /tmp/result >> $resultFile
-  echo >> $resultFile
+#    echo $command
+#    $dockerCommand $command
+    $dockerCommand /usr/bin/time --verbose $command &> /tmp/result
+    $pythonDockerCommand python /scripts/parse_time_memory.py /tmp/result >> $resultFile
+    echo >> $resultFile
+#  fi
 }
 
 conversionsResultFile=results/conversions.tsv
 
 echo -e "Extension\tNumDiscrete\tNumNumeric\tNumRows\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kilobytes" > $conversionsResultFile
 
-#for size in "$small" "$tall" "$wide"
+for size in "$small" "$tall" "$wide"
 #for size in "$small"
 #for size in "$tall"
 #for size in "$wide"
-#do
-#  convertTSV $size "${rDockerCommand}" "Rscript convert_to_parquet.R" prq $conversionsResultFile
-#  convertTSV $size "${rDockerCommand}" "Rscript convert_to_arrow.R" arw $conversionsResultFile
-#  convertTSV $size "${rDockerCommand}" "Rscript convert_to_feather.R" fthr $conversionsResultFile
-#  convertTSV $size "${rDockerCommand}" "Rscript convert_to_fst.R" fst $conversionsResultFile
-#  convertTSV $size "${pythonDockerCommand}" "python convert_to_fwf2.py" fwf2 $conversionsResultFile
-#done
+do
+  convertTSV $size "${rDockerCommand}" "Rscript scripts/convert_to_parquet.R" prq $conversionsResultFile
+  convertTSV $size "${rDockerCommand}" "Rscript scripts/convert_to_arrow.R" arw $conversionsResultFile
+  convertTSV $size "${rDockerCommand}" "Rscript scripts/convert_to_feather.R" fthr $conversionsResultFile
+  convertTSV $size "${rDockerCommand}" "Rscript scripts/convert_to_fst.R" fst $conversionsResultFile
+  convertTSV $size "${pythonDockerCommand}" "python scripts/convert_to_fwf2.py" fwf2 $conversionsResultFile
+done
 
 #NOTE: hdf5 fails when trying to write *wide* files in "table" mode. We can only read specific columns (rather than the whole) file in table mode, not fixed mode.
-#for size in "$small" "$tall"
+for size in "$small" "$tall"
 #for size in "$small"
-#do
-#  convertTSV $size "${pythonDockerCommand}" "python convert_to_hdf5.py" hdf5 $conversionsResultFile
-#done
+do
+  convertTSV $size "${pythonDockerCommand}" "python scripts/convert_to_hdf5.py" hdf5 $conversionsResultFile
+done
+exit
 
 #######################################################
 # Query files. Filter based on values in 2 columns.
@@ -165,8 +175,8 @@ function queryFile {
   #$dockerCommand $command
   #return
   $dockerCommand /usr/bin/time --verbose $command &> /tmp/result
-  $pythonDockerCommand python ParseTimeMemoryInfo.py /tmp/result >> $resultFile
-  $pythonDockerCommand python ParseFileSize.py $outFile >> $resultFile
+  $pythonDockerCommand python parse_time_memory.py /tmp/result >> $resultFile
+  $pythonDockerCommand python parse_file_size.py $outFile >> $resultFile
   echo >> $resultFile
 
   masterFile=/tmp/benchmark_files/${numDiscrete}_${numNumeric}_${numRows}_${queryType}_${columns}_master
@@ -284,8 +294,8 @@ function compressLines {
 
 #  $pythonDockerCommand $command
   $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
-  $pythonDockerCommand python ParseTimeMemoryInfo.py /tmp/result >> $resultFile
-  $pythonDockerCommand python ParseFileSize.py ${outFile}* >> $resultFile
+  $pythonDockerCommand python parse_time_memory.py /tmp/result >> $resultFile
+  $pythonDockerCommand python parse_file_size.py ${outFile}* >> $resultFile
   echo >> $resultFile
 }
 
@@ -397,9 +407,9 @@ function transposeAndCompressLines {
   $pythonDockerCommand python3 compress_lines.py $outFile1 $transposedNumRows $method $level $outFile2
 
   echo -n -e "${numDiscrete}\t${numNumeric}\t${numRows}\t${method}\t${level}" >> $resultFile
-  $pythonDockerCommand python ParseFileSize.py ${inFile1}* >> $resultFile
-  $pythonDockerCommand python ParseFileSize.py ${inFile2}* >> $resultFile
-  $pythonDockerCommand python ParseFileSize.py ${outFile2}* >> $resultFile
+  $pythonDockerCommand python parse_file_size.py ${inFile1}* >> $resultFile
+  $pythonDockerCommand python parse_file_size.py ${inFile2}* >> $resultFile
+  $pythonDockerCommand python parse_file_size.py ${outFile2}* >> $resultFile
   echo >> $resultFile
 }
 
@@ -482,8 +492,8 @@ buildResultFile=results/build_f4py.tsv
 ##                echo $command
 ##                $pythonDockerCommand $command
 #                $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
-#                $pythonDockerCommand python ParseTimeMemoryInfo.py /tmp/result >> $buildResultFile
-#                $pythonDockerCommand python ParseFileSize.py ${outFile} >> $buildResultFile
+#                $pythonDockerCommand python parse_time_memory.py /tmp/result >> $buildResultFile
+#                $pythonDockerCommand python parse_file_size.py ${outFile} >> $buildResultFile
 #                echo >> $buildResultFile
 #            done
 #        done

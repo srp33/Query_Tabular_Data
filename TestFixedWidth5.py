@@ -2,7 +2,7 @@ import msgpack
 import mmap
 import re
 import sys
-from Helper import *
+from helper import *
 
 file_path = sys.argv[1]
 row_indices_file_path = sys.argv[2]
