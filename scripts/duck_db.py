@@ -14,7 +14,6 @@ if col_names_to_keep == "all_columns":
     with open(in_file_path) as in_file:
         all_col_names = in_file.readline().rstrip("\n").split("\t")
 else:
-    #all_col_names = [discrete_query_col_name, numeric_query_col_name] + col_names_to_keep.split(",")
     all_col_names = col_names_to_keep.split(",")
 
 rel = duckdb.from_csv_auto(in_file_path)

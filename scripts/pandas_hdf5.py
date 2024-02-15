@@ -14,8 +14,6 @@ if col_names_to_keep == "all_columns":
 else:
     all_col_names = [discrete_query_col_name, numeric_query_col_name] + col_names_to_keep.split(",")
 
-#all_col_names = [discrete_query_col_name, numeric_query_col_name] + col_names_to_keep
-
 #INFO: We cannot use the where argument because we cannot define "data columns" because in
 #  the real world, we would not know ahead of time which columns would need to be queried.
 df = pd.read_hdf(in_file_path, key="df", mode="r", columns = all_col_names)
@@ -26,6 +24,9 @@ if query_type == "simple":
 elif query_type == "startsendswith":
     #df = df[((df[discrete_query_col_name].str.startswith("A")) | (df[discrete_query_col_name].str.endswith("Z"))) & (df[numeric_query_col_name] >= 0.1)][col_names_to_keep]
     df = df[((df[discrete_query_col_name].str.startswith("A")) | (df[discrete_query_col_name].str.endswith("Z"))) & (df[numeric_query_col_name] >= 0.1)][all_col_names]
+
+if col_names_to_keep != "all_columns":
+    df = df[col_names_to_keep.split(",")]
 
 df.to_csv(out_file_path, sep="\t", header=True, index=False, float_format='%.8f')
 
