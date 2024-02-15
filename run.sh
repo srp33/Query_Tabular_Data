@@ -171,11 +171,11 @@ function queryFile {
 
   echo Running query for ${iteration}, ${numDiscrete}, ${numNumeric}, ${numRows}, ${commandPrefix}, ${queryType}, ${columns}
 
-  $dockerCommand $command
-#  $dockerCommand /usr/bin/time --verbose $command &> /tmp/result
-#  $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result >> $resultFile
-#  $pythonDockerCommand python scripts/parse_file_size.py $outFile >> $resultFile
-#  echo >> $resultFile
+#  $dockerCommand $command
+  $dockerCommand /usr/bin/time --verbose $command &> /tmp/result
+  $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result >> $resultFile
+  $pythonDockerCommand python scripts/parse_file_size.py $outFile >> $resultFile
+  echo >> $resultFile
 
   masterFile=/tmp/benchmark_files/${numDiscrete}_${numNumeric}_${numRows}_${queryType}_${columns}_master
 
@@ -203,30 +203,29 @@ queryResultFile=results/queries.tsv
 echo -e "Iteration\tFileFormat\tCompressionType\tProgrammingLanguage\tAnalysisType\tNumThreads\tCommandPrefix\tQueryType\tColumns\tNumDiscrete\tNumNumeric\tNumRows\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $queryResultFile
 
 #for iteration in {1..5}
-for iteration in {1..1}
-do
-    for queryType in simple startsendswith
+#for iteration in {1..1}
+#do
+#    for queryType in simple startsendswith
 #    for queryType in simple
 #    for queryType in startsendswith
-    do
+#    do
 #        for size in "$small" "$tall" "$wide"
-        for size in "$small"
+#        for size in "$small"
 #        for size in "$tall"
 #        for size in "$wide"
-        do
-            for columns in firstlast_columns all_columns
+#        do
+#            for columns in firstlast_columns all_columns
 #            for columns in firstlast_columns
 #            for columns in all_columns
-            do
-                isMaster=False
-                if [[ "$iteration" == "1" ]]
-                then
-                    isMaster=True
-                fi
-
-                queryFile $iteration $size TSV None Python baseline 1 "${pythonDockerCommand}" "python scripts/line_by_line.py standard_io" $queryType $columns $isMaster tsv "" $queryResultFile
-                queryFile $iteration $size HDF5 None Python "pandas" 1 "${pythonDockerCommand}" "python scripts/pandas_hdf5.py" $queryType $columns False hdf5 "" $queryResultFile
-
+#            do
+#                isMaster=False
+#                if [[ "$iteration" == "1" ]]
+#                then
+#                    isMaster=True
+#                fi
+#
+#                queryFile $iteration $size TSV None Python baseline 1 "${pythonDockerCommand}" "python scripts/line_by_line.py standard_io" $queryType $columns $isMaster tsv "" $queryResultFile
+#
 #                queryFile $iteration $size TSV None Python "baseline - memory mapping" 1 "${pythonDockerCommand}" "python scripts/line_by_line.py memory_map" $queryType $columns False tsv "" $queryResultFile
 #                queryFile $iteration $size TSV None Python awk 1 "${pythonDockerCommand}" "python scripts/awk.py awk" $queryType $columns False tsv "" $queryResultFile
 #                queryFile $iteration $size TSV None Python gawk 1 "${pythonDockerCommand}" "python scripts/awk.py gawk" $queryType $columns False tsv "" $queryResultFile
@@ -258,11 +257,10 @@ do
 #                queryFile $iteration $size "Apache Parquet" None R "arrow" 1 "${rDockerCommand}" "Rscript scripts/arrow.R parquet" $queryType $columns False prq "" $queryResultFile
 #                queryFile $iteration $size FWF None Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2.py" $queryType $columns False fwf2 "" $queryResultFile
 #                queryFile $iteration $size FWF None Rust "basic" 1 "${rustDockerCommand}" "/Rust/fwf2/target/release/main" $queryType $columns False fwf2 "" $queryResultFile
-            done
-        done
-    done
-done
-exit
+#            done
+#        done
+#    done
+#done
 
 ############################################################
 # Build compressed versions of the fixed-width files using
@@ -286,15 +284,15 @@ function compressLines {
     outFile=${outFile}_${level}
   fi
 
-  command="python3 compress_lines.py $inFile $numRows $method $level $outFile"
+  command="python3 scripts/compress_lines.py $inFile $numRows $method $level $outFile"
   echo Running "$command"
 
   echo -n -e "${numDiscrete}\t${numNumeric}\t${numRows}\t${method}\t${level}\t" >> $resultFile
 
 #  $pythonDockerCommand $command
   $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
-  $pythonDockerCommand python parse_time_memory.py /tmp/result >> $resultFile
-  $pythonDockerCommand python parse_file_size.py ${outFile}* >> $resultFile
+  $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result >> $resultFile
+  $pythonDockerCommand python scripts/parse_file_size.py ${outFile}* >> $resultFile
   echo >> $resultFile
 }
 
@@ -324,7 +322,7 @@ mkdir -p data/compressed
 
 compressLinesResultFile=results/compress_lines.tsv
 
-echo -e "NumDiscrete\tNumNumeric\tNumRows\tMethod\tLevel\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $compressLinesResultFile
+#echo -e "NumDiscrete\tNumNumeric\tNumRows\tMethod\tLevel\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $compressLinesResultFile
 
 #compressLinesAll $compressLinesResultFile "$small"
 #compressLinesAll $compressLinesResultFile "$tall"
@@ -335,42 +333,42 @@ echo -e "NumDiscrete\tNumNumeric\tNumRows\tMethod\tLevel\tWallClockSeconds\tUser
 # been compressed line-by-line.
 ############################################################
 
-##for iteration in {1..5}
+#for iteration in {1..5}
 #for iteration in {1..1}
 #do
-#    #for queryType in simple startsendswith
+#    for queryType in simple startsendswith
 #    for queryType in simple
-#    #for queryType in startsendswith
+#    for queryType in startsendswith
 #    do
-##        for size in "$small" "$tall" "$wide"
+#        for size in "$small" "$tall" "$wide"
 #        for size in "$small"
-#        #for size in "$tall"
-#        #for size in "$wide"
+#        for size in "$tall"
+#        for size in "$wide"
 #        do
-#            #for columns in firstlast_columns all_columns
+#            for columns in firstlast_columns all_columns
 #            for columns in firstlast_columns
-#            #for columns in all_columns
+#            for columns in all_columns
 #            do
-#                queryFile $iteration $size FWF bz2__1 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py bz2 1" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF bz2__5 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py bz2 5" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF bz2__9 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py bz2 9" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF gz__1 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py gz 1" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF gz__5 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py gz 5" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF gz__9 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py gz 9" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF lzma Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py lzma NA" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF snappy Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py snappy NA" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF zstd__1 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py zstd 1" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF bz2__1 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py bz2 1" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF bz2__5 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py bz2 5" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF bz2__9 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py bz2 9" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF gz__1 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py gz 1" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF gz__5 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py gz 5" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF gz__9 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py gz 9" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF lzma Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py lzma NA" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF snappy Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py snappy NA" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF zstd__1 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py zstd 1" $queryType $columns False fwf2 "" $queryResultFile
 #                queryFile $iteration $size FWF zstd__1 Rust "basic" 1 "${rustDockerCommand}" "/Rust/fwf2_cmpr/target/release/main zstd 1" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF zstd__5 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py zstd 5" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF zstd__5 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py zstd 5" $queryType $columns False fwf2 "" $queryResultFile
 #                queryFile $iteration $size FWF zstd__5 Rust "basic" 1 "${rustDockerCommand}" "/Rust/fwf2_cmpr/target/release/main zstd 5" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF zstd__9 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py zstd 9" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF zstd__9 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py zstd 9" $queryType $columns False fwf2 "" $queryResultFile
 #                queryFile $iteration $size FWF zstd__9 Rust "basic" 1 "${rustDockerCommand}" "/Rust/fwf2_cmpr/target/release/main zstd 9" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF zstd__22 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py zstd 22" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF zstd__22 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py zstd 22" $queryType $columns False fwf2 "" $queryResultFile
 #                queryFile $iteration $size FWF zstd__22 Rust "basic" 1 "${rustDockerCommand}" "/Rust/fwf2_cmpr/target/release/main zstd 22" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF lz4__0 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py lz4 0" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF lz4__5 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py lz4 5" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF lz4__10 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py lz4 10" $queryType $columns False fwf2 "" $queryResultFile
-#                queryFile $iteration $size FWF lz4__16 Python "basic" 1 "${pythonDockerCommand}" "python fwf2_cmpr.py lz4 16" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF lz4__0 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py lz4 0" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF lz4__5 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py lz4 5" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF lz4__10 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py lz4 10" $queryType $columns False fwf2 "" $queryResultFile
+#                queryFile $iteration $size FWF lz4__16 Python "basic" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr.py lz4 16" $queryType $columns False fwf2 "" $queryResultFile
 #            done
 #        done
 #    done
@@ -424,6 +422,7 @@ echo -e "NumDiscrete\tNumNumeric\tNumRows\tMethod\tLevel\tUncompressedSize_kb\tP
 #    transposeAndCompressLines $tcResultFile $tall zstd $level
 #    transposeAndCompressLines $tcResultFile $wide zstd $level
 #done
+exit
 
 ############################################################
 # Measure how quickly we can query the files that have
