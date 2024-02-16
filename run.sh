@@ -397,16 +397,19 @@ function transposeAndCompressLines {
   if [ ! -f $outFile1 ]
   then
     echo Transpose $inFile1 to $outFile1
-    $pythonDockerCommand python3 transpose_fwf2.py $inFile1 $outFile1
+    $pythonDockerCommand python3 scripts/transpose_fwf2.py $inFile1 $outFile1
   fi
 
-  echo Compressing $outFile1 to $outFile2
-  $pythonDockerCommand python3 compress_lines.py $outFile1 $transposedNumRows $method $level $outFile2
+  if [ ! -f $outFile2 ]
+  then
+    echo Compressing $outFile1 to $outFile2
+    $pythonDockerCommand python3 scripts/compress_lines.py $outFile1 $transposedNumRows $method $level $outFile2
+  fi
 
   echo -n -e "${numDiscrete}\t${numNumeric}\t${numRows}\t${method}\t${level}" >> $resultFile
-  $pythonDockerCommand python parse_file_size.py ${inFile1}* >> $resultFile
-  $pythonDockerCommand python parse_file_size.py ${inFile2}* >> $resultFile
-  $pythonDockerCommand python parse_file_size.py ${outFile2}* >> $resultFile
+  $pythonDockerCommand python scripts/parse_file_size.py ${inFile1}* >> $resultFile
+  $pythonDockerCommand python scripts/parse_file_size.py ${inFile2}* >> $resultFile
+  $pythonDockerCommand python scripts/parse_file_size.py ${outFile2}* >> $resultFile
   echo >> $resultFile
 }
 
@@ -414,7 +417,7 @@ mkdir -p data/transposed data/transposed_and_compressed
 
 tcResultFile=results/transposed_compressed.tsv
 
-echo -e "NumDiscrete\tNumNumeric\tNumRows\tMethod\tLevel\tUncompressedSize_kb\tPortraitCompressedSize_kb\tLandscapeCompressedSize_kb" > $tcResultFile
+#echo -e "NumDiscrete\tNumNumeric\tNumRows\tMethod\tLevel\tUncompressedSize_kb\tPortraitCompressedSize_kb\tLandscapeCompressedSize_kb" > $tcResultFile
 
 #for level in 1 5 9 22
 #do
@@ -422,7 +425,6 @@ echo -e "NumDiscrete\tNumNumeric\tNumRows\tMethod\tLevel\tUncompressedSize_kb\tP
 #    transposeAndCompressLines $tcResultFile $tall zstd $level
 #    transposeAndCompressLines $tcResultFile $wide zstd $level
 #done
-exit
 
 ############################################################
 # Measure how quickly we can query the files that have
@@ -433,22 +435,23 @@ exit
 ##for iteration in {1..5}
 #for iteration in {1..1}
 #do
-##    for queryType in simple startsendswith
+#    for queryType in simple startsendswith
 #    for queryType in simple
-##    #for queryType in startsendswith
+#    for queryType in startsendswith
 #    do
-#        #for size in "$small" "$tall" "$wide"
+#        for size in "$small" "$tall" "$wide"
 #        for size in "$small"
-#        #for size in "$tall"
-#        #for size in "$wide"
+#        for size in "$tall"
+#        for size in "$wide"
 #        do
-#            #for columns in firstlast_columns all_columns
+#            for columns in firstlast_columns all_columns
 #            for columns in firstlast_columns
-#            #for columns in all_columns
+#            for columns in all_columns
 #            do
 #                for level in 1 5 9 22
+#                for level in 1
 #                do
-#                    queryFile $iteration $size FWF zstd__${level} Python "transposed" 1 "${pythonDockerCommand}" "python fwf2_cmpr_trps.py zstd ${level}" $queryType $columns False fwf2 "" $queryResultFile
+#                    queryFile $iteration $size FWF zstd__${level} Python "transposed" 1 "${pythonDockerCommand}" "python scripts/fwf2_cmpr_trps.py zstd ${level}" $queryType $columns False fwf2 "" $queryResultFile
 #                    queryFile $iteration $size FWF zstd__${level} Rust "transposed" 1 "${rustDockerCommand}" "/Rust/fwf2_cmpr_trps/target/release/main zstd ${level}" $queryType $columns False fwf2 "" $queryResultFile
 #                done
 #            done
@@ -464,19 +467,19 @@ exit
 buildResultFile=results/build_f4py.tsv
 #echo -e "Iteration\tNumDiscrete\tNumNumeric\tNumRows\tThreads\tCompressionType\tIncludesEndsWithIndex\t\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $buildResultFile
 
-##for iteration in {1..5}
+#for iteration in {1..5}
 #for iteration in {1..1}
 #do
-##    for size in "$small" "$tall" "$wide"
+#    for size in "$small" "$tall" "$wide"
 #    for size in "$small"
-##    #for size in "$tall"
-##    #for size in "$wide"
+#    #for size in "$tall"
+#    #for size in "$wide"
 #    do
 #        for threads in 1
-##        for threads in 16
-##        #for threads in 1 4 16
+#        for threads in 16
+#        #for threads in 1 4 16
 #        do
-##            for compression_type in None
+#            for compression_type in None
 #            for compression_type in None zstd
 #            do
 #                dataFile=data/${size// /_}.tsv
@@ -485,18 +488,19 @@ buildResultFile=results/build_f4py.tsv
 #                rm -rf ${outFile}*
 #
 #                echo -n -e "${iteration}\t${size// /\\t}\t${threads}\t${compression_type}\t" >> $buildResultFile
-#                command="python convert_to_f4.py $dataFile $threads ${compression_type} Discrete2,Numeric2;Discrete2_endswith,Numeric2 $outFile"
+#                command="python scripts/convert_to_f4.py $dataFile $threads ${compression_type} Discrete2,Numeric2;Discrete2_endswith,Numeric2 $outFile"
 #
-##                echo $command
-##                $pythonDockerCommand $command
+#                echo $command
+#                $pythonDockerCommand $command
 #                $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
-#                $pythonDockerCommand python parse_time_memory.py /tmp/result >> $buildResultFile
-#                $pythonDockerCommand python parse_file_size.py ${outFile} >> $buildResultFile
+#                $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result >> $buildResultFile
+#                $pythonDockerCommand python scripts/parse_file_size.py ${outFile} >> $buildResultFile
 #                echo >> $buildResultFile
 #            done
 #        done
 #    done
 #done
+exit
 
 ##for iteration in {1..5}
 ##for iteration in {1..3}
