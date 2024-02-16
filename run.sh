@@ -500,36 +500,35 @@ buildResultFile=results/build_f4py.tsv
 #        done
 #    done
 #done
-exit
 
-##for iteration in {1..5}
-##for iteration in {1..3}
+#for iteration in {1..5}
+#for iteration in {1..3}
 #for iteration in {1..1}
 #do
-##    for size in "$small" "$tall" "$wide"
+#    for size in "$small" "$tall" "$wide"
 #    for size in "$small"
-##    #for size in "$tall"
-##    #for size in "$wide"
+#    #for size in "$tall"
+#    #for size in "$wide"
 #    do
-##        for queryType in simple startsendswith
-##        for queryType in simple
+#        for queryType in simple startsendswith
+#        for queryType in simple
 #        for queryType in startsendswith
 #        do
-##            for columns in firstlast_columns all_columns
-##            for columns in firstlast_columns
+#            for columns in firstlast_columns all_columns
+#            for columns in firstlast_columns
 #            for columns in all_columns
 #            do
 #                for threads in 1
-##                #for threads in 4
-##                #for threads in 16
-##                #for threads in 1 4
-##                for threads in 1 4 16
+#                for threads in 4
+#                for threads in 16
+#                for threads in 1 4
+#                for threads in 1 4 16
 #                do
-##                    for compression_type in None
-##                    for compression_type in zstd
+#                    for compression_type in None
+#                    for compression_type in zstd
 #                    for compression_type in None zstd
 #                    do
-#                        queryFile $iteration $size F4 ${compression_type} Python "basic - f4" ${threads} "${pythonDockerCommand}" "python query_f4.py $threads ${compression_type}" $queryType $columns False f4 "_${compression_type}" $queryResultFile
+#                        queryFile $iteration $size F4 ${compression_type} Python "basic - f4" ${threads} "${pythonDockerCommand}" "python scripts/query_f4.py $threads ${compression_type}" $queryType $columns False f4 "_${compression_type}" $queryResultFile
 #                    done
 #                done
 #            done
