@@ -33,18 +33,16 @@ with gzip.open(out_samples_file_path, "w") as out_samples_file:
 ########################################################
 
 transcripts_h5 = h5py.File(in_file_path)["meta"]["transcripts"]
-#ensembl_gene_ids = [x for x in transcripts_h5["ensembl_gene_id"]]
-ensembl_transcript_ids = [x for x in transcripts_h5["ensembl_transcript_id"]]
-#gene_symbols = [x for x in transcripts_h5["gene_symbol"]]
-#gene_biotypes = [x for x in transcripts_h5["gene_biotype"]]
+ensembl_ids = [x for x in transcripts_h5["ensembl_id"]]
+gene_symbols = [x for x in transcripts_h5["symbol"]]
+gene_biotypes = [x for x in transcripts_h5["biotype"]]
 
 expr_h5 = h5py.File(in_file_path)["data"]["expression"]
 
 with gzip.open(out_expr_file_path, "w") as out_file:
-    #out_file.write(b"\t".join([b"ensembl_gene_id", b"ensembl_transcript_id", b"gene_symbol", b"gene_biotype"] + sample_dict["geo_accession"]) + b"\n")
-    out_file.write(b"\t".join([b"ensembl_transcript_id"] + sample_dict["geo_accession"]) + b"\n")
+    out_file.write(b"\t".join([b"ensembl_id"] + sample_dict["geo_accession"]) + b"\n")
 
-    chunk_size = 5000
+    chunk_size = 100
     for i in range(0, expr_h5.shape[0], chunk_size):
         print(f"Retrieving expression data for row {i}", flush=True)
 
@@ -52,6 +50,5 @@ with gzip.open(out_expr_file_path, "w") as out_file:
         chunk = np.array(expr_h5[i:end_i,:]).tolist()
 
         for row in chunk:
-            #out_items = [ensembl_gene_ids.pop(0), ensembl_transcript_ids.pop(0), gene_symbols.pop(0), gene_biotypes.pop(0)] + [str(x).encode() for x in row]
-            out_items = [ensembl_transcript_ids.pop(0)] + [str(x).encode() for x in row]
+            out_items = [ensembl_ids.pop(0)] + [str(x).encode() for x in row]
             out_file.write(b"\t".join(out_items) + b"\n")

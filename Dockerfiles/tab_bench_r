@@ -1,6 +1,8 @@
-FROM r-base:4.2.1
+#FROM r-base:4.3.2
+FROM rocker/tidyverse:4.3.2
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends --allow-unauthenticated time libcurl4-openssl-dev libssl-dev
 
-RUN R -e "install.packages(c('arrow', 'data.table', 'dplyr', 'gdata', 'ff', 'fst', 'feather', 'readr', 'vroom'), Ncpus=4)"
+#RUN R -e "install.packages(c('arrow', 'data.table', 'dplyr', 'gdata', 'ff', 'fst', 'feather', 'readr', 'vroom'))"
+RUN R -e "install.packages(c('gdata', 'ff', 'feather'))"

@@ -9,7 +9,7 @@
 # Interpreting output of time command:
 #   https://stackoverflow.com/questions/556405/what-do-real-user-and-sys-mean-in-the-output-of-time1
 
-set -o errexit
+#set -o errexit
 
 #######################################################
 # Create directories
@@ -53,9 +53,9 @@ function buildDockerImage {
 #buildDockerImage tab_bench_r
 #buildDockerImage tab_bench_rust $currentDir/Rust
 
-#baseDockerCommand="docker run --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
-baseDockerCommand="docker run -i -t --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
-#baseDockerCommand="docker run -d --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+baseDockerCommand="docker run --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+#baseDockerCommand="docker run -i -t --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+#baseDockerCommand="docker run -d --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
 pythonDockerCommand="$baseDockerCommand $pythonImage"
 rDockerCommand="$baseDockerCommand $rImage"
 rustDockerCommand="$baseDockerCommand $rustImage"
@@ -91,20 +91,20 @@ function convertTSV {
   dataFile=data/${numDiscrete}_${numNumeric}_$numRows.tsv
   outFile=data/${numDiscrete}_${numNumeric}_${numRows}.${outExtension}
 
-#  if [ -f $outFile ]
-#  then
-#    echo $outFile already exists.
-#  else
+  if [ -f $outFile ]
+  then
+    echo $outFile already exists.
+  else
     echo -n -e "${outExtension}\t$numDiscrete\t$numNumeric\t$numRows\t" >> $resultFile
   
     command="${commandPrefix} $dataFile $outFile"
 
-#    echo $command
-#    $dockerCommand $command
+    echo $command
+    $dockerCommand $command
     $dockerCommand /usr/bin/time --verbose $command &> /tmp/result
-    $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result >> $resultFile
+    $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "" $resultFile
     echo >> $resultFile
-#  fi
+  fi
 }
 
 conversionsResultFile=results/conversions.tsv
@@ -157,7 +157,7 @@ function queryFile {
   dataFile=data/${numDiscrete}_${numNumeric}_${numRows}${inFileNameSuffix}.${inFileExtension}
   outFile=/tmp/benchmark_files/${numDiscrete}_${numNumeric}_${numRows}_${queryType}_${columns}
 
-  rm -f $outFile
+  rm -f /tmp/result $outFile
 
   echo -n -e "${iteration}\t${fileFormat}\t${compressionType}\t${programmingLanguage}\t${analysisType}\t${numThreads}\t${commandPrefix}\t$queryType\t$columns\t$numDiscrete\t$numNumeric\t$numRows\t" >> $resultFile
 
@@ -171,28 +171,42 @@ function queryFile {
 
   echo Running query for ${iteration}, ${numDiscrete}, ${numNumeric}, ${numRows}, ${commandPrefix}, ${queryType}, ${columns}
 
-#  $dockerCommand $command
-  $dockerCommand /usr/bin/time --verbose $command &> /tmp/result
-  $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result >> $resultFile
-  $pythonDockerCommand python scripts/parse_file_size.py $outFile >> $resultFile
-  echo >> $resultFile
+  $dockerCommand /usr/bin/time --verbose timeout 3600 $command &> /tmp/result
+
+  status=$?
+
+  if [ $status -eq 0 ]; then
+    error_result=""
+  elif [ $status -eq 124 ]; then
+    error_result="Timeout"
+    echo Timeout
+  else
+    error_result="Error"
+    echo Error
+  fi
 
   masterFile=/tmp/benchmark_files/${numDiscrete}_${numNumeric}_${numRows}_${queryType}_${columns}_master
 
-  if [[ "$isMaster" == "False" ]]
+  if [[ "$isMaster" == "True" ]]
   then
-      if [ -f $outFile ]
+      echo Saving master file for ${iteration}, ${numDiscrete}, ${numNumeric}, ${numRows}, ${commandPrefix}, ${queryType}, ${columns}
+      mv $outFile $masterFile
+  else
+      if [[ "${error_result}" == "" ]]
       then
           echo Checking output for ${iteration}, ${numDiscrete}, ${numNumeric}, ${numRows}, ${commandPrefix}, ${queryType}, ${columns} in ${outFile}
-          python CheckOutput.py $outFile $masterFile
-      else
-          echo No output for ${iteration}, ${numDiscrete}, ${numNumeric}, ${numRows}, ${commandPrefix}, ${queryType}, ${columns}
+          rm -f /tmp/error_result
+          python scripts/check_output.py $outFile $masterFile /tmp/error_result
+
+          if [ -f /tmp/error_result ]
+          then
+              error_result=$(cat /tmp/error_result)
+          fi
       fi
-  else
-    echo Saving master file for ${iteration}, ${numDiscrete}, ${numNumeric}, ${numRows}, ${commandPrefix}, ${queryType}, ${columns}
-    mv $outFile $masterFile
-    echo "  Done"
   fi
+
+  $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "${error_result}" $resultFile
+  $pythonDockerCommand python scripts/parse_file_size.py $outFile "${error_result}" $resultFile True
 }
 
 #rm -rf /tmp/benchmark_files
@@ -200,7 +214,7 @@ mkdir -p /tmp/benchmark_files
 
 queryResultFile=results/queries.tsv
 
-echo -e "Iteration\tFileFormat\tCompressionType\tProgrammingLanguage\tAnalysisType\tNumThreads\tCommandPrefix\tQueryType\tColumns\tNumDiscrete\tNumNumeric\tNumRows\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $queryResultFile
+#echo -e "Iteration\tFileFormat\tCompressionType\tProgrammingLanguage\tAnalysisType\tNumThreads\tCommandPrefix\tQueryType\tColumns\tNumDiscrete\tNumNumeric\tNumRows\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $queryResultFile
 
 #for iteration in {1..5}
 #for iteration in {1..1}
@@ -291,8 +305,8 @@ function compressLines {
 
 #  $pythonDockerCommand $command
   $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
-  $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result >> $resultFile
-  $pythonDockerCommand python scripts/parse_file_size.py ${outFile}* >> $resultFile
+  $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "" $resultFile
+  $pythonDockerCommand python scripts/parse_file_size.py "${outFile}*" "" $resultFile True
   echo >> $resultFile
 }
 
@@ -407,9 +421,9 @@ function transposeAndCompressLines {
   fi
 
   echo -n -e "${numDiscrete}\t${numNumeric}\t${numRows}\t${method}\t${level}" >> $resultFile
-  $pythonDockerCommand python scripts/parse_file_size.py ${inFile1}* >> $resultFile
-  $pythonDockerCommand python scripts/parse_file_size.py ${inFile2}* >> $resultFile
-  $pythonDockerCommand python scripts/parse_file_size.py ${outFile2}* >> $resultFile
+  $pythonDockerCommand python scripts/parse_file_size.py "${inFile1}*" "" $resultFile False
+  $pythonDockerCommand python scripts/parse_file_size.py "${inFile2}*" "" $resultFile False
+  $pythonDockerCommand python scripts/parse_file_size.py "${outFile2}*" "" $resultFile False
   echo >> $resultFile
 }
 
@@ -432,7 +446,7 @@ tcResultFile=results/transposed_compressed.tsv
 # version of the data for filtering.
 ############################################################
 
-##for iteration in {1..5}
+#for iteration in {1..5}
 #for iteration in {1..1}
 #do
 #    for queryType in simple startsendswith
@@ -465,7 +479,7 @@ tcResultFile=results/transposed_compressed.tsv
 ############################################################
 
 buildResultFile=results/build_f4py.tsv
-#echo -e "Iteration\tNumDiscrete\tNumNumeric\tNumRows\tThreads\tCompressionType\tIncludesEndsWithIndex\t\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $buildResultFile
+echo -e "Iteration\tNumDiscrete\tNumNumeric\tNumRows\tThreads\tCompressionType\tIncludesEndsWithIndex\t\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $buildResultFile
 
 #for iteration in {1..5}
 #for iteration in {1..1}
@@ -477,7 +491,7 @@ buildResultFile=results/build_f4py.tsv
 #    do
 #        for threads in 1
 #        for threads in 16
-#        #for threads in 1 4 16
+#        for threads in 1 4 16
 #        do
 #            for compression_type in None
 #            for compression_type in None zstd
@@ -493,22 +507,20 @@ buildResultFile=results/build_f4py.tsv
 #                echo $command
 #                $pythonDockerCommand $command
 #                $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
-#                $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result >> $buildResultFile
-#                $pythonDockerCommand python scripts/parse_file_size.py ${outFile} >> $buildResultFile
-#                echo >> $buildResultFile
+#                $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "" $buildResultFile
+#                $pythonDockerCommand python scripts/parse_file_size.py ${outFile} "" $buildResultFile True
 #            done
 #        done
 #    done
 #done
 
 #for iteration in {1..5}
-#for iteration in {1..3}
 #for iteration in {1..1}
 #do
 #    for size in "$small" "$tall" "$wide"
 #    for size in "$small"
-#    #for size in "$tall"
-#    #for size in "$wide"
+#    for size in "$tall"
+#    for size in "$wide"
 #    do
 #        for queryType in simple startsendswith
 #        for queryType in simple
@@ -536,8 +548,6 @@ buildResultFile=results/build_f4py.tsv
 #    done
 #done
 
-exit
-
 ############################################################
 # Real-world data: ARCHS4
 ############################################################
@@ -549,9 +559,10 @@ mkdir -p data/archs4
 #  Convert to f4 rather than fwf2.
 #  Run queries. Probably don't need to validate the output. Just check metrics.
 
-#$pythonDockerCommand wget -O data/archs4/human_tpm_v11.h5 https://s3.amazonaws.com/mssm-seq-matrix/human_tpm_v11.h5
-#$pythonDockerCommand python convert_archs4_hdf5_to_tsv.py data/archs4/human_tpm_v11.h5 data/archs4/human_tpm_v11_sample.tsv.gz data/archs4/human_tpm_v11_expr.tsv.gz
-#$pythonDockerCommand python parse_archs4.py data/archs4/human_tpm_v11_sample.tsv.gz data/archs4/human_tpm_v11_expr.tsv.gz data/archs4/archs4.f4
+#$pythonDockerCommand wget -O data/archs4/human_tpm_v2.2.h5 https://s3.dev.maayanlab.cloud/archs4/files/human_tpm_v2.2.h5
+$pythonDockerCommand python scripts/convert_archs4_hdf5_to_tsv.py data/archs4/human_tpm_v2.2.h5 data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz
+exit
+#$pythonDockerCommand python parse_archs4.py data/archs4/human_tpm_v2.2human_tpm_v11_sample.tsv.gz data/archs4/human_tpm_v2.2human_tpm_v11_expr.tsv.gz data/archs4/human_tpm_v2.2archs4.f4
 #rm -f data/archs4/archs4_sample.tsv.gz
 #TODO: Write code to query In parse_archs4.py, remove temp files. They are in the data dir. Then change the paths so these are in data/archs4.
 
@@ -562,13 +573,11 @@ mkdir -p data/archs4
 mkdir -p data/cadd
 
 #TODO: remove these two lines?
-#$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz https://krishna.gs.washington.edu/download/CADD/v1.6/GRCh38/whole_genome_SNVs.tsv.gz
-#$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz.tbi https://krishna.gs.washington.edu/download/CADD/v1.6/GRCh38/whole_genome_SNVs.tsv.gz.tbi
-#$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs_inclAnno.tsv.gz https://krishna.gs.washington.edu/download/CADD/v1.6/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz
-#$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs_inclAnno.tsv.gz.tbi https://krishna.gs.washington.edu/download/CADD/v1.6/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz.tbi
+$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz
+##$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs_inclAnno.tsv.gz.tbi https://krishna.gs.washington.edu/download/CADD/v1.6/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz.tbi
 
 #$pythonDockerCommand zcat data/cadd/whole_genome_SNVs_inclAnno.tsv.gz | head -n 10000 | gzip > data/cadd/small.tsv.gz
-$pythonDockerCommand python convert_cadd.py data/cadd/whole_genome_SNVs_inclAnno.tsv.gz data/cadd/cadd.f4
+#$pythonDockerCommand python convert_cadd.py data/cadd/whole_genome_SNVs_inclAnno.tsv.gz data/cadd/cadd.f4
 # The full-sized CADD file has 12221577961 lines total.
 
 
