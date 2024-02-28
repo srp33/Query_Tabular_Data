@@ -482,37 +482,37 @@ buildResultFile=results/build_f4py.tsv
 echo -e "Iteration\tNumDiscrete\tNumNumeric\tNumRows\tThreads\tCompressionType\tIncludesEndsWithIndex\t\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $buildResultFile
 
 #for iteration in {1..5}
-#for iteration in {1..1}
-#do
+for iteration in {1..1}
+do
 #    for size in "$small" "$tall" "$wide"
-#    for size in "$small"
+    for size in "$small"
 #    #for size in "$tall"
 #    #for size in "$wide"
-#    do
-#        for threads in 1
+    do
+        for threads in 1
 #        for threads in 16
 #        for threads in 1 4 16
-#        do
+        do
 #            for compression_type in None
-#            for compression_type in None zstd
-#            do
-#                dataFile=data/${size// /_}.tsv
-#
-#                outFile=data/${size// /_}_${compression_type}.f4
-#                rm -rf ${outFile}*
-#
-#                echo -n -e "${iteration}\t${size// /\\t}\t${threads}\t${compression_type}\t" >> $buildResultFile
-#                command="python scripts/convert_to_f4.py $dataFile $threads ${compression_type} Discrete2,Numeric2;Discrete2_endswith,Numeric2 $outFile"
-#
-#                echo $command
-#                $pythonDockerCommand $command
-#                $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
-#                $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "" $buildResultFile
-#                $pythonDockerCommand python scripts/parse_file_size.py ${outFile} "" $buildResultFile True
-#            done
-#        done
-#    done
-#done
+            for compression_type in None zstd
+            do
+                dataFile=data/${size// /_}.tsv
+
+                outFile=data/${size// /_}_${compression_type}.f4
+                rm -rf ${outFile}*
+
+                echo -n -e "${iteration}\t${size// /\\t}\t${threads}\t${compression_type}\t" >> $buildResultFile
+                command="python scripts/convert_to_f4.py $dataFile $threads ${compression_type} Discrete2;Discrete2_endswith;Numeric2 $outFile"
+
+                echo $command
+                $pythonDockerCommand $command
+                $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
+                $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "" $buildResultFile
+                $pythonDockerCommand python scripts/parse_file_size.py ${outFile} "" $buildResultFile True
+            done
+        done
+    done
+done
 
 #for iteration in {1..5}
 #for iteration in {1..1}
