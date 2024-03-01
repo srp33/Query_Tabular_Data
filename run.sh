@@ -53,8 +53,8 @@ function buildDockerImage {
 #buildDockerImage tab_bench_r
 #buildDockerImage tab_bench_rust $currentDir/Rust
 
-baseDockerCommand="docker run --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
-#baseDockerCommand="docker run -i -t --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+#baseDockerCommand="docker run --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+baseDockerCommand="docker run -i -t --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
 #baseDockerCommand="docker run -d --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
 pythonDockerCommand="$baseDockerCommand $pythonImage"
 rDockerCommand="$baseDockerCommand $rImage"
@@ -479,40 +479,40 @@ tcResultFile=results/transposed_compressed.tsv
 ############################################################
 
 buildResultFile=results/build_f4py.tsv
-echo -e "Iteration\tNumDiscrete\tNumNumeric\tNumRows\tThreads\tCompressionType\tIncludesEndsWithIndex\t\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $buildResultFile
+#echo -e "Iteration\tNumDiscrete\tNumNumeric\tNumRows\tThreads\tCompressionType\tIncludesEndsWithIndex\t\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kb\tOutputFileSize_kb" > $buildResultFile
 
 #for iteration in {1..5}
-for iteration in {1..1}
-do
+#for iteration in {1..1}
+#do
 #    for size in "$small" "$tall" "$wide"
-    for size in "$small"
+#    for size in "$small"
 #    #for size in "$tall"
 #    #for size in "$wide"
-    do
-        for threads in 1
+#    do
+#        for threads in 1
 #        for threads in 16
 #        for threads in 1 4 16
-        do
+#        do
 #            for compression_type in None
-            for compression_type in None zstd
-            do
-                dataFile=data/${size// /_}.tsv
-
-                outFile=data/${size// /_}_${compression_type}.f4
-                rm -rf ${outFile}*
-
-                echo -n -e "${iteration}\t${size// /\\t}\t${threads}\t${compression_type}\t" >> $buildResultFile
-                command="python scripts/convert_to_f4.py $dataFile $threads ${compression_type} Discrete2;Discrete2_endswith;Numeric2 $outFile"
-
-                echo $command
-                $pythonDockerCommand $command
-                $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
-                $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "" $buildResultFile
-                $pythonDockerCommand python scripts/parse_file_size.py ${outFile} "" $buildResultFile True
-            done
-        done
-    done
-done
+#            for compression_type in None zstd
+#            do
+#                dataFile=data/${size// /_}.tsv
+#
+#                outFile=data/${size// /_}_${compression_type}.f4
+#                rm -rf ${outFile}*
+#
+#                echo -n -e "${iteration}\t${size// /\\t}\t${threads}\t${compression_type}\t" >> $buildResultFile
+#                command="python scripts/convert_to_f4.py $dataFile $threads ${compression_type} Discrete2;Discrete2_endswith;Numeric2 $outFile"
+#
+#                echo $command
+#                $pythonDockerCommand $command
+#                $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
+#                $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "" $buildResultFile
+#                $pythonDockerCommand python scripts/parse_file_size.py ${outFile} "" $buildResultFile True
+#            done
+#        done
+#    done
+#done
 
 #for iteration in {1..5}
 #for iteration in {1..1}
@@ -560,11 +560,12 @@ mkdir -p data/archs4
 #  Run queries. Probably don't need to validate the output. Just check metrics.
 
 #$pythonDockerCommand wget -O data/archs4/human_tpm_v2.2.h5 https://s3.dev.maayanlab.cloud/archs4/files/human_tpm_v2.2.h5
-$pythonDockerCommand python scripts/convert_archs4_hdf5_to_tsv.py data/archs4/human_tpm_v2.2.h5 data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz
-exit
+#$pythonDockerCommand python scripts/convert_archs4_hdf5_to_tsv.py data/archs4/human_tpm_v2.2.h5 data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz
+#$pythonDockerCommand rm data/archs4/human_tpm_v2.2.h5
 #$pythonDockerCommand python parse_archs4.py data/archs4/human_tpm_v2.2human_tpm_v11_sample.tsv.gz data/archs4/human_tpm_v2.2human_tpm_v11_expr.tsv.gz data/archs4/human_tpm_v2.2archs4.f4
 #rm -f data/archs4/archs4_sample.tsv.gz
 #TODO: Write code to query In parse_archs4.py, remove temp files. They are in the data dir. Then change the paths so these are in data/archs4.
+#exit
 
 ############################################################
 # Real-world data: CADD
@@ -572,9 +573,8 @@ exit
 
 mkdir -p data/cadd
 
-#TODO: remove these two lines?
-$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz
-##$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs_inclAnno.tsv.gz.tbi https://krishna.gs.washington.edu/download/CADD/v1.6/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz.tbi
+#$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz
+#$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz.tbi https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz.tbi
 
 #$pythonDockerCommand zcat data/cadd/whole_genome_SNVs_inclAnno.tsv.gz | head -n 10000 | gzip > data/cadd/small.tsv.gz
 #$pythonDockerCommand python convert_cadd.py data/cadd/whole_genome_SNVs_inclAnno.tsv.gz data/cadd/cadd.f4
