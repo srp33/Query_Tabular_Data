@@ -53,8 +53,8 @@ function buildDockerImage {
 #buildDockerImage tab_bench_r
 #buildDockerImage tab_bench_rust $currentDir/Rust
 
-#baseDockerCommand="docker run --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
-baseDockerCommand="docker run -i -t --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+baseDockerCommand="docker run --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+#baseDockerCommand="docker run -i -t --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
 #baseDockerCommand="docker run -d --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
 pythonDockerCommand="$baseDockerCommand $pythonImage"
 rDockerCommand="$baseDockerCommand $rImage"
@@ -562,9 +562,11 @@ mkdir -p data/archs4
 #$pythonDockerCommand wget -O data/archs4/human_tpm_v2.2.h5 https://s3.dev.maayanlab.cloud/archs4/files/human_tpm_v2.2.h5
 #$pythonDockerCommand python scripts/convert_archs4_hdf5_to_tsv.py data/archs4/human_tpm_v2.2.h5 data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz
 #$pythonDockerCommand rm data/archs4/human_tpm_v2.2.h5
-#$pythonDockerCommand python parse_archs4.py data/archs4/human_tpm_v2.2human_tpm_v11_sample.tsv.gz data/archs4/human_tpm_v2.2human_tpm_v11_expr.tsv.gz data/archs4/human_tpm_v2.2archs4.f4
+
+$pythonDockerCommand python scripts/parse_archs4.py data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz data/archs4/human_tpm_v2.2.f4
 #rm -f data/archs4/archs4_sample.tsv.gz
 #TODO: Write code to query In parse_archs4.py, remove temp files. They are in the data dir. Then change the paths so these are in data/archs4.
+#TODO: Make notes here about the dimensions of the data.
 #exit
 
 ############################################################
