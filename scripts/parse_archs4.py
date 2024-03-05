@@ -82,17 +82,17 @@ tmp_expr_transposed_f4_file_path = "data/archs4/expr_transposed.f4"
 #save_sample_info_to_f4()
 
 # This code renames the first column.
-with gzip.open(expr_file_path, compresslevel=1) as expr_file:
-    header_items = expr_file.readline().rstrip(b"\n").split(b"\t")
-    header_items[0] = b"geo_accession"
-
-    with gzip.open(tmp_tsv_file_path, "w", compresslevel=1) as tmp_tsv_file:
-        tmp_tsv_file.write(b"\t".join(header_items) + b"\n")
-
-        for line_i, line in enumerate(expr_file):
-            if line_i % 1000 == 0:
-                print(line_i, flush=True)
-            tmp_tsv_file.write(line)
+#with gzip.open(expr_file_path, compresslevel=1) as expr_file:
+#    header_items = expr_file.readline().rstrip(b"\n").split(b"\t")
+#    header_items[0] = b"geo_accession"
+#
+#    with gzip.open(tmp_tsv_file_path, "w", compresslevel=1) as tmp_tsv_file:
+#        tmp_tsv_file.write(b"\t".join(header_items) + b"\n")
+#
+#        for line_i, line in enumerate(expr_file):
+#            if line_i % 1000 == 0:
+#                print(line_i, flush=True)
+#            tmp_tsv_file.write(line)
 
 f4.convert_delimited_file(tmp_tsv_file_path, tmp_expr_f4_file_path, compression_type="zstd", num_parallel=16, tmp_dir_path="data/archs4/f4_tmp", verbose=True)
 sys.exit()
