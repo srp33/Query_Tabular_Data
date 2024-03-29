@@ -94,15 +94,19 @@ tmp_expr_transposed_f4_file_path = "data/archs4/expr_transposed.f4"
 #                print(line_i, flush=True)
 #            tmp_tsv_file.write(line)
 
-f4.convert_delimited_file(tmp_tsv_file_path, tmp_expr_f4_file_path, compression_type="zstd", num_parallel=16, tmp_dir_path="data/archs4/f4_tmp", verbose=True)
+#f4.convert_delimited_file(tmp_tsv_file_path, tmp_expr_f4_file_path, compression_type="zstd", num_parallel=16, tmp_dir_path="data/archs4/f4_tmp", verbose=True)
+#f4.head(tmp_expr_f4_file_path)
+#print(f4.get_num_rows(tmp_expr_f4_file_path))
+#print(f4.get_num_cols(tmp_expr_f4_file_path))
+
+#os.remove(tmp_tsv_file_path)
+
+#f4.transpose(tmp_expr_f4_file_path, tmp_expr_transposed_f4_file_path, num_parallel=16, verbose=True)
 sys.exit()
-
-#shutil.rmtree("data/archs4/f4_tmp")
-
-f4.transpose(tmp_expr_f4_file_path, tmp_expr_transposed_f4_file_path, num_parallel=16, verbose=True)
 f4.inner_join(tmp_sample_f4_file_path, tmp_expr_transposed_f4_file_path, join_column="geo_accession", f4_dest_file_path=out_f4_file_path, num_parallel=16, verbose=True)
 f4.build_indexes(out_f4_file_path, index_columns=["age", "cell type", "tissue", "sex"], verbose=True)
 
+#shutil.rmtree("data/archs4/f4_tmp")
 os.remove(tmp_tsv_file_path)
 os.remove(tmp_sample_f4_file_path)
 os.remove(tmp_expr_f4_file_path)

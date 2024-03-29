@@ -563,11 +563,11 @@ mkdir -p data/archs4
 #$pythonDockerCommand python scripts/convert_archs4_hdf5_to_tsv.py data/archs4/human_tpm_v2.2.h5 data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz
 #$pythonDockerCommand rm data/archs4/human_tpm_v2.2.h5
 
-$pythonDockerCommand python scripts/parse_archs4.py data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz data/archs4/human_tpm_v2.2.f4
-#rm -f data/archs4/archs4_sample.tsv.gz
-#TODO: Write code to query In parse_archs4.py, remove temp files. They are in the data dir. Then change the paths so these are in data/archs4.
-#TODO: Make notes here about the dimensions of the data.
-#exit
+#$pythonDockerCommand python scripts/parse_archs4.py data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz data/archs4/human_tpm_v2.2.f4
+# Num rows (transcripts) = 271,742
+# Num columns (samples) = 722,438
+
+#rm -f data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz
 
 ############################################################
 # Real-world data: CADD
@@ -578,9 +578,11 @@ mkdir -p data/cadd
 #$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz
 #$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz.tbi https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz.tbi
 
-#$pythonDockerCommand zcat data/cadd/whole_genome_SNVs_inclAnno.tsv.gz | head -n 10000 | gzip > data/cadd/small.tsv.gz
-#$pythonDockerCommand python convert_cadd.py data/cadd/whole_genome_SNVs_inclAnno.tsv.gz data/cadd/cadd.f4
-# The full-sized CADD file has 12221577961 lines total.
+#zcat data/cadd/whole_genome_SNVs.tsv.gz | head -n 100000 | gzip > data/cadd/small.tsv.gz
+#################$pythonDockerCommand python scripts/convert_cadd.py data/cadd/small.tsv.gz data/cadd/small.f4
+$pythonDockerCommand python scripts/convert_cadd.py data/cadd/whole_genome_SNVs.tsv.gz data/cadd/cadd.f4
+# The full-sized CADD file has ?????12221577961 lines total.
+exit
 
 
 
