@@ -554,18 +554,16 @@ buildResultFile=results/build_f4py.tsv
 
 mkdir -p data/archs4
 
-#TODO:
-#  Parse tsv.gz files and combine them into one. Parse the characteristics and set defaults to NA.
-#  Convert to f4 rather than fwf2.
-#  Run queries. Probably don't need to validate the output. Just check metrics.
-
 #$pythonDockerCommand wget -O data/archs4/human_tpm_v2.2.h5 https://s3.dev.maayanlab.cloud/archs4/files/human_tpm_v2.2.h5
 #$pythonDockerCommand python scripts/convert_archs4_hdf5_to_tsv.py data/archs4/human_tpm_v2.2.h5 data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz
 #$pythonDockerCommand rm data/archs4/human_tpm_v2.2.h5
 
-#$pythonDockerCommand python scripts/parse_archs4.py data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz data/archs4/human_tpm_v2.2.f4
+$pythonDockerCommand python scripts/parse_archs4.py data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz data/archs4/human_tpm_v2.2.f4
+#TODO: Run some queries.
 # Num rows (transcripts) = 271,742
 # Num columns (samples) = 722,438
+# Total data points = 196,316,746,996
+exit
 
 #rm -f data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz
 
@@ -582,6 +580,7 @@ mkdir -p data/cadd
 #################$pythonDockerCommand python scripts/convert_cadd.py data/cadd/small.tsv.gz data/cadd/small.f4
 $pythonDockerCommand python scripts/convert_cadd.py data/cadd/whole_genome_SNVs.tsv.gz data/cadd/cadd.f4
 # The full-sized CADD file has ?????12221577961 lines total.
+# How many data points?
 exit
 
 
