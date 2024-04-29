@@ -101,11 +101,13 @@ tmp_expr_transposed_f4_file_path = "data/archs4/expr_transposed.f4"
 
 #os.remove(tmp_tsv_file_path)
 
-f4.transpose(tmp_expr_f4_file_path, tmp_expr_transposed_f4_file_path, src_column_for_names="geo_accession", num_parallel=16, verbose=True)
+f4.transpose(tmp_expr_f4_file_path, tmp_expr_transposed_f4_file_path, src_column_for_names="geo_accession", num_parallel=16, tmp_dir_path="data/archs4/transpose_tmp", use_memory_mapping=False, verbose=True)
 sys.exit()
-f4.inner_join(tmp_sample_f4_file_path, tmp_expr_transposed_f4_file_path, join_column="geo_accession", f4_dest_file_path=out_f4_file_path, index_columns=["age", "cell type", "tissue", "sex"], num_parallel=16, verbose=True)
+f4.inner_join(tmp_sample_f4_file_path, tmp_expr_transposed_f4_file_path, join_column="geo_accession", f4_dest_file_path=out_f4_file_path, index_columns=["age", "cell type", "tissue", "sex"], num_parallel=16, tmp_dir_path="data/archs4/join_tmp", verbose=True)
 
 #shutil.rmtree("data/archs4/f4_tmp")
+#shutil.rmtree("data/archs4/transpose_tmp")
+#shutil.rmtree("data/archs4/join_tmp")
 os.remove(tmp_tsv_file_path)
 os.remove(tmp_sample_f4_file_path)
 os.remove(tmp_expr_f4_file_path)
