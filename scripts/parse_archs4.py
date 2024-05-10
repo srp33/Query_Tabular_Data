@@ -79,36 +79,35 @@ tmp_sample_f4_file_path = "data/archs4/sample.f4"
 tmp_expr_f4_file_path = "data/archs4/expr.f4"
 tmp_expr_transposed_f4_file_path = "data/archs4/expr_transposed.f4"
 
-#save_sample_info_to_f4()
+save_sample_info_to_f4()
 
 # This code renames the first column.
-#with gzip.open(expr_file_path, compresslevel=1) as expr_file:
-#    header_items = expr_file.readline().rstrip(b"\n").split(b"\t")
-#    header_items[0] = b"geo_accession"
-#
-#    with gzip.open(tmp_tsv_file_path, "w", compresslevel=1) as tmp_tsv_file:
-#        tmp_tsv_file.write(b"\t".join(header_items) + b"\n")
-#
-#        for line_i, line in enumerate(expr_file):
-#            if line_i % 1000 == 0:
-#                print(line_i, flush=True)
-#            tmp_tsv_file.write(line)
+with gzip.open(expr_file_path, compresslevel=1) as expr_file:
+    header_items = expr_file.readline().rstrip(b"\n").split(b"\t")
+    header_items[0] = b"geo_accession"
 
-#f4.convert_delimited_file(tmp_tsv_file_path, tmp_expr_f4_file_path, compression_type="zstd", num_parallel=16, tmp_dir_path="data/archs4/f4_tmp", verbose=True)
-#f4.head(tmp_expr_f4_file_path)
-#print(f4.get_num_rows(tmp_expr_f4_file_path))
-#print(f4.get_num_cols(tmp_expr_f4_file_path))
+    with gzip.open(tmp_tsv_file_path, "w", compresslevel=1) as tmp_tsv_file:
+        tmp_tsv_file.write(b"\t".join(header_items) + b"\n")
 
-#os.remove(tmp_tsv_file_path)
+        for line_i, line in enumerate(expr_file):
+            if line_i % 1000 == 0:
+                print(line_i, flush=True)
+            tmp_tsv_file.write(line)
+
+f4.convert_delimited_file(tmp_tsv_file_path, tmp_expr_f4_file_path, compression_type="zstd", num_parallel=16, tmp_dir_path="data/archs4/f4_tmp", verbose=True)
+
+os.remove(tmp_tsv_file_path)
 
 f4.transpose(tmp_expr_f4_file_path, tmp_expr_transposed_f4_file_path, src_column_for_names="geo_accession", num_parallel=16, tmp_dir_path="data/archs4/transpose_tmp", use_memory_mapping=False, verbose=True)
-sys.exit()
 f4.inner_join(tmp_sample_f4_file_path, tmp_expr_transposed_f4_file_path, join_column="geo_accession", f4_dest_file_path=out_f4_file_path, index_columns=["age", "cell type", "tissue", "sex"], num_parallel=16, tmp_dir_path="data/archs4/join_tmp", verbose=True)
 
-#shutil.rmtree("data/archs4/f4_tmp")
-#shutil.rmtree("data/archs4/transpose_tmp")
-#shutil.rmtree("data/archs4/join_tmp")
-os.remove(tmp_tsv_file_path)
+shutil.rmtree("data/archs4/f4_tmp")
+shutil.rmtree("data/archs4/transpose_tmp")
+shutil.rmtree("data/archs4/join_tmp")
 os.remove(tmp_sample_f4_file_path)
 os.remove(tmp_expr_f4_file_path)
 os.remove(tmp_expr_transposed_f4_file_path)
+
+#f4.head(out_f4_file_path)
+print(f4.get_num_rows(out_f4_file_path))
+print(f4.get_num_cols(out_f4_file_path))

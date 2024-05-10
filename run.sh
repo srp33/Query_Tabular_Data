@@ -559,10 +559,11 @@ mkdir -p data/archs4
 #$pythonDockerCommand rm data/archs4/human_tpm_v2.2.h5
 
 $pythonDockerCommand python scripts/parse_archs4.py data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz data/archs4/human_tpm_v2.2.f4
+# Num rows (transcripts) = 722,437
+# Num columns (samples) = 271,811
+# Total data points = 196,366,323,407
+
 #TODO: Run some queries.
-# Num rows (transcripts) = 271,742
-# Num columns (samples) = 722,438
-# Total data points = 196,316,746,996
 exit
 
 #rm -f data/archs4/human_tpm_v2.2_sample.tsv.gz data/archs4/human_tpm_v2.2_expr.tsv.gz
