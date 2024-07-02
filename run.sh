@@ -24,6 +24,7 @@ mkdir -p data results scripts
 pythonImage=tab_bench_python
 rImage=tab_bench_r
 rustImage=tab_bench_rust
+tabixImage=tabix
 
 currentDir="$(pwd)"
 tmpDir=/tmp/build_docker
@@ -49,15 +50,17 @@ function buildDockerImage {
     cd $currentDir
 }
 
-buildDockerImage tab_bench_python
+#buildDockerImage tab_bench_python
 #buildDockerImage tab_bench_r
 #buildDockerImage tab_bench_rust $currentDir/Rust
+#buildDockerImage tabix
 
 #baseDockerCommand="docker run --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
 baseDockerCommand="docker run -i -t --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
 pythonDockerCommand="$baseDockerCommand $pythonImage"
 rDockerCommand="$baseDockerCommand $rImage"
 rustDockerCommand="$baseDockerCommand $rustImage"
+tabixDockerCommand="$baseDockerCommand $tabixImage"
 
 #######################################################
 # Create TSV files
@@ -576,24 +579,36 @@ mkdir -p data/cadd
 #$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz
 #$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz.tbi https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz.tbi
 
-#$pythonDockerCommand python scripts/convert_cadd.py data/cadd/whole_genome_SNVs.tsv.gz data/cadd/cadd.f4
+$pythonDockerCommand python scripts/convert_cadd.py data/cadd/whole_genome_SNVs.tsv.gz data/cadd/cadd.f4
 # 12103673445 rows
 # 153 columns
 # 1.851862e+12 = 1.85 trillion data points
+exit
 
 
 caddResultFile=results/cadd.tsv
 
-echo -e "NumThreads\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kilobytes" > $caddResultFile
+echo -e "Tool\tNumThreads\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kilobytes" > $caddResultFile
 
 for numThreads in 1 4 8 16 32
 do
-    echo -e -n "$numThreads\t" >> $caddResultFile
-    command="python scripts/query_cadd.py data/cadd/cadd.f4 $numThreads /tmp/cadd_test_results.tsv"
+    echo -e -n "F4\t$numThreads\t" >> $caddResultFile
+    command="python scripts/query_cadd.py data/cadd/cadd.f4 $numThreads /tmp/cadd_f4_results.tsv"
 
     echo $command
-    $pythonDockerCommand $command
+    #$pythonDockerCommand $command
     $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
+    $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "" $caddResultFile
+
+    echo >> $caddResultFile
+
+    echo -e -n "tabix\t$numThreads\t" >> $caddResultFile
+
+    command="/htslib/bin/tabix -s 1 -b 2 -e 2 --threads $numThreads data/cadd/whole_genome_SNVs.tsv.gz 17:7661779-7687546 > /tmp/cadd_tabix_results.tsv"
+
+    echo $command
+    #$tabixDockerCommand bash -c "$command"
+    $tabixDockerCommand /usr/bin/time --verbose bash -c "$command" &> /tmp/result
     $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "" $caddResultFile
 
     echo >> $caddResultFile
