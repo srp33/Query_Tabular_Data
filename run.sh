@@ -53,9 +53,8 @@ function buildDockerImage {
 #buildDockerImage tab_bench_r
 #buildDockerImage tab_bench_rust $currentDir/Rust
 
-baseDockerCommand="docker run --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
-#baseDockerCommand="docker run -i -t --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
-#baseDockerCommand="docker run -d --rm -m 100g --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+#baseDockerCommand="docker run --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+baseDockerCommand="docker run -i -t --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
 pythonDockerCommand="$baseDockerCommand $pythonImage"
 rDockerCommand="$baseDockerCommand $rImage"
 rustDockerCommand="$baseDockerCommand $rustImage"
@@ -577,16 +576,13 @@ mkdir -p data/cadd
 #$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz
 #$pythonDockerCommand wget -O data/cadd/whole_genome_SNVs.tsv.gz.tbi https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs_inclAnno.tsv.gz.tbi
 
-#zcat data/cadd/whole_genome_SNVs.tsv.gz | head -n 100000 | gzip > data/cadd/small.tsv.gz
-#################$pythonDockerCommand python scripts/convert_cadd.py data/cadd/small.tsv.gz data/cadd/small.f4
 $pythonDockerCommand python scripts/convert_cadd.py data/cadd/whole_genome_SNVs.tsv.gz data/cadd/cadd.f4
-# The full-sized CADD file has ?????12221577961 lines total.
-# How many data points?
+# 12103673445 rows
+# 153 columns
+# 1.851862e+12 = 1.85 trillion data points
 exit
 
 
-
-#$pythonDockerCommand python convert_cadd.py data/cadd/small.tsv.gz data/cadd/full.tsv.gz
 
 #zcat data/whole_genome_SNVs_inclAnno.tsv.gz | head -n 2 | tail -n +2 | cut -c2- | gzip > data/cadd.tsv.gz
 #zcat data/whole_genome_SNVs_inclAnno.tsv.gz | tail -n +3 | gzip >> data/cadd.tsv.gz
