@@ -49,7 +49,7 @@ function buildDockerImage {
     cd $currentDir
 }
 
-#buildDockerImage tab_bench_python
+buildDockerImage tab_bench_python
 #buildDockerImage tab_bench_r
 #buildDockerImage tab_bench_rust $currentDir/Rust
 
@@ -581,4 +581,24 @@ mkdir -p data/cadd
 # 153 columns
 # 1.851862e+12 = 1.85 trillion data points
 
-$pythonDockerCommand python scripts/query_cadd.py data/cadd/cadd.f4
+
+caddResultFile=results/cadd.tsv
+
+echo -e "NumThreads\tWallClockSeconds\tUserSeconds\tSystemSeconds\tMaxMemoryUsed_kilobytes" > $caddResultFile
+
+for numThreads in 1 4 8 16 32
+do
+    echo -e -n "$numThreads\t" >> $caddResultFile
+    command="python scripts/query_cadd.py data/cadd/cadd.f4 $numThreads /tmp/cadd_test_results.tsv"
+
+    echo $command
+    $pythonDockerCommand $command
+    $pythonDockerCommand /usr/bin/time --verbose $command &> /tmp/result
+    $pythonDockerCommand python scripts/parse_time_memory.py /tmp/result "" $caddResultFile
+
+    echo >> $caddResultFile
+done
+
+cat $caddResultFile
+
+#TODO: Clean up scripts in this repository.
