@@ -55,8 +55,8 @@ function buildDockerImage {
 #buildDockerImage tab_bench_rust $currentDir/Rust
 #buildDockerImage tabix
 
-#baseDockerCommand="docker run --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
-baseDockerCommand="docker run -i -t --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+baseDockerCommand="docker run --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
+#baseDockerCommand="docker run -i -t --rm --user $(id -u):$(id -g) -v $(pwd)/data:/data -v $(pwd)/results:/results -v $(pwd)/scripts:/scripts -v /tmp:/tmp"
 pythonDockerCommand="$baseDockerCommand $pythonImage"
 rDockerCommand="$baseDockerCommand $rImage"
 rustDockerCommand="$baseDockerCommand $rustImage"
@@ -583,6 +583,9 @@ $pythonDockerCommand python scripts/convert_cadd.py data/cadd/whole_genome_SNVs.
 # 12103673445 rows
 # 153 columns
 # 1.851862e+12 = 1.85 trillion data points
+
+#TODO: Add fireducks to the list of packages tested.
+#      Update versions of the packages we are already testing.
 exit
 
 
